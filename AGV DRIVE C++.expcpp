@@ -1,1 +1,267 @@
-{"mode":"Text","textContent":"#pragma region VEXcode Generated Robot Configuration\n// Make sure all required headers are included.\n#include <stdio.h>\n#include <stdlib.h>\n#include <stdbool.h>\n#include <math.h>\n#include <string.h>\n\n\n#include \"vex.h\"\n\nusing namespace vex;\n\n// Brain should be defined by default\nbrain Brain;\n\n\n// START EXP MACROS\n#define waitUntil(condition)                                                   \\\n  do {                                                                         \\\n    wait(5, msec);                                                             \\\n  } while (!(condition))\n\n#define repeat(iterations)                                                     \\\n  for (int iterator = 0; iterator < iterations; iterator++)\n// END EXP MACROS\n\n\n// Robot configuration code.\ninertial BrainInertial = inertial();\nbumper BumperG = bumper(Brain.ThreeWirePort.G);\ndistance Distance7 = distance(PORT7);\nline LineTrackerA = line(Brain.ThreeWirePort.A);\nline LineTrackerH = line(Brain.ThreeWirePort.H);\nmotor Motor5 = motor(PORT5, false);\n\nbumper BumperB = bumper(Brain.ThreeWirePort.B);\nmotor MotorL = motor(PORT1, false);\n\nmotor MotorR = motor(PORT6, true);\n\ncontroller Controller = controller();\noptical Optical2 = optical(PORT2);\nline LineTrackerF = line(Brain.ThreeWirePort.F);\n\n\n\n// define variable for remote controller enable/disable\nbool RemoteControlCodeEnabled = true;\n// define variables used for controlling motors based on controller inputs\nbool ControllerRightShoulderControlMotorsStopped = true;\nbool eButtonsControlMotorsStopped = true;\nbool fButtonsControlMotorsStopped = true;\n\n// define a task that will handle monitoring inputs from Controller\nint rc_auto_loop_function_Controller() {\n  // process the controller input every 20 milliseconds\n  // update the motors based on the input values\n  while(true) {\n    if(RemoteControlCodeEnabled) {\n      // check the ButtonR1/ButtonR2 status to control Motor5\n      if (Controller.ButtonR1.pressing()) {\n        Motor5.spin(forward);\n        ControllerRightShoulderControlMotorsStopped = false;\n      } else if (Controller.ButtonR2.pressing()) {\n        Motor5.spin(reverse);\n        ControllerRightShoulderControlMotorsStopped = false;\n      } else if (!ControllerRightShoulderControlMotorsStopped) {\n        Motor5.stop();\n        // set the toggle so that we don't constantly tell the motor to stop when the buttons are released\n        ControllerRightShoulderControlMotorsStopped = true;\n      }\n      // check the ButtonUp/ButtonDown status to control MotorL\n      if (Controller.ButtonUp.pressing()) {\n        MotorL.spin(forward);\n        eButtonsControlMotorsStopped = false;\n      } else if (Controller.ButtonDown.pressing()) {\n        MotorL.spin(reverse);\n        eButtonsControlMotorsStopped = false;\n      } else if (!eButtonsControlMotorsStopped) {\n        MotorL.stop();\n        // set the toggle so that we don't constantly tell the motor to stop when the buttons are released\n        eButtonsControlMotorsStopped = true;\n      }\n      // check the ButtonA/ButtonB status to control MotorR\n      if (Controller.ButtonA.pressing()) {\n        MotorR.spin(forward);\n        fButtonsControlMotorsStopped = false;\n      } else if (Controller.ButtonB.pressing()) {\n        MotorR.spin(reverse);\n        fButtonsControlMotorsStopped = false;\n      } else if (!fButtonsControlMotorsStopped) {\n        MotorR.stop();\n        // set the toggle so that we don't constantly tell the motor to stop when the buttons are released\n        fButtonsControlMotorsStopped = true;\n      }\n    }\n    // wait before repeating the process\n    wait(20, msec);\n  }\n  return 0;\n}\n\ntask rc_auto_loop_task_Controller(rc_auto_loop_function_Controller);\n#pragma endregion VEXcode Generated Robot Configuration\n// Include the EXP Library\n#include \"vex.h\"\n  \n// Allows for easier use of the VEX Library\nusing namespace vex;\n\nint Brain_precision = 0, Console_precision = 0;\n\nfloat myVariable, DRIVERCONTROL, autonomi, offline, motionCheck, optical, leftLine, rightLine, centerLine, stopLine;\n\nevent message1 = event();\nevent autonom = event();\nevent stop = event();\n\n// \"when I receive stop\" hat block\nvoid onevent_stop_0() {\n  Motor5.stop();\n  MotorL.stop();\n  MotorR.stop();\n  Motor5.setVelocity(100.0, percent);\n  MotorL.setVelocity(100.0, percent);\n  MotorR.setVelocity(100.0, percent);\n}\n\n// \"when I receive message1\" hat block\nvoid onevent_message1_0() {\n  Motor5.stop();\n  MotorL.stop();\n  MotorR.stop();\n}\n\n// Used to find the format string for printing numbers with the\n// desired number of decimal places\nconst char* printToBrain_numberFormat() {\n  // look at the current precision setting to find the format string\n  switch(Brain_precision){\n    case 0:  return \"%.0f\"; // 0 decimal places (1)\n    case 1:  return \"%.1f\"; // 1 decimal place  (0.1)\n    case 2:  return \"%.2f\"; // 2 decimal places (0.01)\n    case 3:  return \"%.3f\"; // 3 decimal places (0.001)\n    default: return \"%f\"; // use the print system default for everthing else\n  }\n}\n\n// \"when started\" hat block\nint whenStarted1() {\n  DRIVERCONTROL = 2.0;\n  Motor5.setVelocity(100.0, percent);\n  MotorL.setVelocity(100.0, percent);\n  MotorR.setVelocity(100.0, percent);\n  Optical2.gestureDisable();\n  while (true) {\n    Brain.Screen.setCursor(1, 1);\n    Brain.Screen.print(printToBrain_numberFormat(), static_cast<float>(LineTrackerA.reflectivity()));\n    Brain.Screen.setCursor(2, 1);\n    Brain.Screen.print(printToBrain_numberFormat(), static_cast<float>(LineTrackerH.reflectivity()));\n    Brain.Screen.setCursor(3, 1);\n    Brain.Screen.print(printToBrain_numberFormat(), static_cast<float>(LineTrackerF.reflectivity()));\n    Brain.Screen.setCursor(4, 1);\n    Brain.Screen.print(printToBrain_numberFormat(), static_cast<float>(Distance7.objectDistance(inches)));\n    wait(1.0, seconds);\n    Brain.Screen.clearScreen();\n    Brain.Screen.setCursor(1, 1);\n    if (DRIVERCONTROL == 0.0) {\n      autonomi = 0.0;\n    }\n  wait(5, msec);\n  }\n  return 0;\n}\n\n// \"when I receive autonom\" hat block\nvoid onevent_autonom_0() {\n  Motor5.setVelocity(10.0, percent);\n  MotorL.setVelocity(10.0, percent);\n  MotorR.setVelocity(10.0, percent);\n  if (autonomi == 1.0) {\n    while (!(autonomi == 0.0)) {\n      if (Distance7.objectDistance(inches) < 4.0) {\n        message1.broadcast();\n        Motor5.stop();\n        MotorL.stop();\n        MotorR.stop();\n      }\n      if (LineTrackerA.reflectivity() < 20.0 && LineTrackerH.reflectivity() < 20.0) {\n        MotorL.stop();\n        MotorR.stop();\n        wait(6.0, seconds);\n        MotorL.spin(reverse);\n        MotorR.spin(reverse);\n        wait(0.5, seconds);\n      }\n      if (LineTrackerA.reflectivity() < 38.0) {\n        MotorL.stop();\n        MotorR.spin(reverse);\n      } else if (LineTrackerH.reflectivity() < 38.0) {\n        MotorR.stop();\n        MotorL.spin(reverse);\n      } else {\n        MotorL.spin(reverse);\n        MotorR.spin(reverse);\n      }\n    wait(5, msec);\n    }\n  }\n}\n\n// \"when BumperG pressed\" hat block\nvoid onevent_BumperG_pressed_0() {\n  Brain.playNote(3, 1, 1000);\n  DRIVERCONTROL = 1.0;\n  autonomi = 1.0;\n  autonom.broadcastAndWait();\n}\n\n// \"when BumperB pressed\" hat block\nvoid onevent_BumperB_pressed_0() {\n  Brain.playSound(tada);\n  DRIVERCONTROL = 0.0;\n  autonomi = 0.0;\n  stop.broadcastAndWait();\n}\n\n// \"when Controller ButtonL1 pressed\" hat block\nvoid onevent_ControllerButtonL1_pressed_0() {\n  Brain.playNote(3, 1, 1000);\n  DRIVERCONTROL = 1.0;\n  autonomi = 1.0;\n  autonom.broadcastAndWait();\n}\n\n// \"when Controller ButtonL2 pressed\" hat block\nvoid onevent_ControllerButtonL2_pressed_0() {\n  Brain.playSound(tada);\n  DRIVERCONTROL = 0.0;\n  autonomi = 0.0;\n  stop.broadcastAndWait();\n}\n\n\nint main() {\n  // register event handlers\n  stop(onevent_stop_0);\n  message1(onevent_message1_0);\n  autonom(onevent_autonom_0);\n  BumperG.pressed(onevent_BumperG_pressed_0);\n  BumperB.pressed(onevent_BumperB_pressed_0);\n  Controller.ButtonL1.pressed(onevent_ControllerButtonL1_pressed_0);\n  Controller.ButtonL2.pressed(onevent_ControllerButtonL2_pressed_0);\n\n  wait(15, msec);\n  // post event registration\n\n  // set default print color to black\n  printf(\"\\033[30m\");\n\n  // Wait for ADI sensors to initialize\n  wait(100, msec);\n\n\n  whenStarted1();\n}","textLanguage":"cpp","rconfig":[{"port":[7],"name":"BumperG","customName":false,"deviceType":"Bumper","deviceClass":"bumper","setting":{},"triportSourcePort":22},{"port":[7],"name":"Distance7","customName":false,"deviceType":"Distance","deviceClass":"distance","setting":{},"triportSourcePort":22},{"port":[1],"name":"LineTrackerA","customName":false,"deviceType":"LineTracker","deviceClass":"line","setting":{},"triportSourcePort":22},{"port":[8],"name":"LineTrackerH","customName":false,"deviceType":"LineTracker","deviceClass":"line","setting":{},"triportSourcePort":22},{"port":[5],"name":"Motor5","customName":false,"deviceType":"Motor","deviceClass":"motor","setting":{"reversed":"false","fwd":"forward","rev":"reverse"},"triportSourcePort":22},{"port":[2],"name":"BumperB","customName":false,"deviceType":"Bumper","deviceClass":"bumper","setting":{},"triportSourcePort":22},{"port":[1],"name":"MotorL","customName":true,"deviceType":"Motor","deviceClass":"motor","setting":{"reversed":"false","fwd":"forward","rev":"reverse"},"triportSourcePort":22},{"port":[6],"name":"MotorR","customName":true,"deviceType":"Motor","deviceClass":"motor","setting":{"reversed":"true","fwd":"forward","rev":"reverse"},"triportSourcePort":22},{"port":[],"name":"Controller","customName":false,"deviceType":"Controller","deviceClass":"controller","setting":{"left":"","leftDir":"false","right":"Motor5","rightDir":"false","e":"MotorL","eDir":"false","f":"MotorR","fDir":"false","l3r3":"","l3r3Dir":"false","drive":"none"},"triportSourcePort":22},{"port":[2],"name":"Optical2","customName":false,"deviceType":"Optical","deviceClass":"optical","setting":{},"triportSourcePort":22},{"port":[6],"name":"LineTrackerF","customName":false,"deviceType":"LineTracker","deviceClass":"line","setting":{},"triportSourcePort":22}],"slot":0,"platform":"EXP","sdkVersion":"20220726.10.00.00","appVersion":"","minVersion":"2.4.0","fileFormat":"1.0.1","icon":"","targetBrainGen":"First","target":"Physical"}
+#pragma region VEXcode Generated Robot Configuration
+// Make sure all required headers are included.
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <math.h>
+#include <string.h>
+
+
+#include "vex.h"
+
+using namespace vex;
+
+// Brain should be defined by default
+brain Brain;
+
+
+// START EXP MACROS
+#define waitUntil(condition)                                                   \
+  do {                                                                         \
+    wait(5, msec);                                                             \
+  } while (!(condition))
+
+#define repeat(iterations)                                                     \
+  for (int iterator = 0; iterator < iterations; iterator++)
+// END EXP MACROS
+
+
+// Robot configuration code.
+inertial BrainInertial = inertial();
+bumper BumperG = bumper(Brain.ThreeWirePort.G);
+distance Distance7 = distance(PORT7);
+line LineTrackerA = line(Brain.ThreeWirePort.A);
+line LineTrackerH = line(Brain.ThreeWirePort.H);
+motor Motor5 = motor(PORT5, false);
+
+bumper BumperB = bumper(Brain.ThreeWirePort.B);
+motor MotorL = motor(PORT1, false);
+
+motor MotorR = motor(PORT6, true);
+
+controller Controller = controller();
+optical Optical2 = optical(PORT2);
+line LineTrackerF = line(Brain.ThreeWirePort.F);
+
+
+
+// define variable for remote controller enable/disable
+bool RemoteControlCodeEnabled = true;
+// define variables used for controlling motors based on controller inputs
+bool ControllerRightShoulderControlMotorsStopped = true;
+bool eButtonsControlMotorsStopped = true;
+bool fButtonsControlMotorsStopped = true;
+
+// define a task that will handle monitoring inputs from Controller
+int rc_auto_loop_function_Controller() {
+  // process the controller input every 20 milliseconds
+  // update the motors based on the input values
+  while(true) {
+    if(RemoteControlCodeEnabled) {
+      // check the ButtonR1/ButtonR2 status to control Motor5
+      if (Controller.ButtonR1.pressing()) {
+        Motor5.spin(forward);
+        ControllerRightShoulderControlMotorsStopped = false;
+      } else if (Controller.ButtonR2.pressing()) {
+        Motor5.spin(reverse);
+        ControllerRightShoulderControlMotorsStopped = false;
+      } else if (!ControllerRightShoulderControlMotorsStopped) {
+        Motor5.stop();
+        // set the toggle so that we don't constantly tell the motor to stop when the buttons are released
+        ControllerRightShoulderControlMotorsStopped = true;
+      }
+      // check the ButtonUp/ButtonDown status to control MotorL
+      if (Controller.ButtonUp.pressing()) {
+        MotorL.spin(forward);
+        eButtonsControlMotorsStopped = false;
+      } else if (Controller.ButtonDown.pressing()) {
+        MotorL.spin(reverse);
+        eButtonsControlMotorsStopped = false;
+      } else if (!eButtonsControlMotorsStopped) {
+        MotorL.stop();
+        // set the toggle so that we don't constantly tell the motor to stop when the buttons are released
+        eButtonsControlMotorsStopped = true;
+      }
+      // check the ButtonA/ButtonB status to control MotorR
+      if (Controller.ButtonA.pressing()) {
+        MotorR.spin(forward);
+        fButtonsControlMotorsStopped = false;
+      } else if (Controller.ButtonB.pressing()) {
+        MotorR.spin(reverse);
+        fButtonsControlMotorsStopped = false;
+      } else if (!fButtonsControlMotorsStopped) {
+        MotorR.stop();
+        // set the toggle so that we don't constantly tell the motor to stop when the buttons are released
+        fButtonsControlMotorsStopped = true;
+      }
+    }
+    // wait before repeating the process
+    wait(20, msec);
+  }
+  return 0;
+}
+
+task rc_auto_loop_task_Controller(rc_auto_loop_function_Controller);
+#pragma endregion VEXcode Generated Robot Configuration
+// Include the EXP Library
+#include "vex.h"
+  
+// Allows for easier use of the VEX Library
+using namespace vex;
+
+int Brain_precision = 0, Console_precision = 0;
+
+float myVariable, DRIVERCONTROL, autonomi, offline, motionCheck, optical, leftLine, rightLine, centerLine, stopLine;
+
+event message1 = event();
+event autonom = event();
+event stop = event();
+
+// "when I receive stop" hat block
+void onevent_stop_0() {
+  Motor5.stop();
+  MotorL.stop();
+  MotorR.stop();
+  Motor5.setVelocity(100.0, percent);
+  MotorL.setVelocity(100.0, percent);
+  MotorR.setVelocity(100.0, percent);
+}
+
+// "when I receive message1" hat block
+void onevent_message1_0() {
+  Motor5.stop();
+  MotorL.stop();
+  MotorR.stop();
+}
+
+// Used to find the format string for printing numbers with the
+// desired number of decimal places
+const char* printToBrain_numberFormat() {
+  // look at the current precision setting to find the format string
+  switch(Brain_precision){
+    case 0:  return "%.0f"; // 0 decimal places (1)
+    case 1:  return "%.1f"; // 1 decimal place  (0.1)
+    case 2:  return "%.2f"; // 2 decimal places (0.01)
+    case 3:  return "%.3f"; // 3 decimal places (0.001)
+    default: return "%f"; // use the print system default for everthing else
+  }
+}
+
+// "when started" hat block
+int whenStarted1() {
+  DRIVERCONTROL = 2.0;
+  Motor5.setVelocity(100.0, percent);
+  MotorL.setVelocity(100.0, percent);
+  MotorR.setVelocity(100.0, percent);
+  Optical2.gestureDisable();
+  while (true) {
+    Brain.Screen.setCursor(1, 1);
+    Brain.Screen.print(printToBrain_numberFormat(), static_cast<float>(LineTrackerA.reflectivity()));
+    Brain.Screen.setCursor(2, 1);
+    Brain.Screen.print(printToBrain_numberFormat(), static_cast<float>(LineTrackerH.reflectivity()));
+    Brain.Screen.setCursor(3, 1);
+    Brain.Screen.print(printToBrain_numberFormat(), static_cast<float>(LineTrackerF.reflectivity()));
+    Brain.Screen.setCursor(4, 1);
+    Brain.Screen.print(printToBrain_numberFormat(), static_cast<float>(Distance7.objectDistance(inches)));
+    wait(1.0, seconds);
+    Brain.Screen.clearScreen();
+    Brain.Screen.setCursor(1, 1);
+    if (DRIVERCONTROL == 0.0) {
+      autonomi = 0.0;
+    }
+  wait(5, msec);
+  }
+  return 0;
+}
+
+// "when I receive autonom" hat block
+void onevent_autonom_0() {
+  Motor5.setVelocity(10.0, percent);
+  MotorL.setVelocity(10.0, percent);
+  MotorR.setVelocity(10.0, percent);
+  if (autonomi == 1.0) {
+    while (!(autonomi == 0.0)) {
+      if (Distance7.objectDistance(inches) < 4.0) {
+        message1.broadcast();
+        Motor5.stop();
+        MotorL.stop();
+        MotorR.stop();
+      }
+      if (LineTrackerA.reflectivity() < 20.0 && LineTrackerH.reflectivity() < 20.0) {
+        MotorL.stop();
+        MotorR.stop();
+        wait(6.0, seconds);
+        MotorL.spin(reverse);
+        MotorR.spin(reverse);
+        wait(0.5, seconds);
+      }
+      if (LineTrackerA.reflectivity() < 38.0) {
+        MotorL.stop();
+        MotorR.spin(reverse);
+      } else if (LineTrackerH.reflectivity() < 38.0) {
+        MotorR.stop();
+        MotorL.spin(reverse);
+      } else {
+        MotorL.spin(reverse);
+        MotorR.spin(reverse);
+      }
+    wait(5, msec);
+    }
+  }
+}
+
+// "when BumperG pressed" hat block
+void onevent_BumperG_pressed_0() {
+  Brain.playNote(3, 1, 1000);
+  DRIVERCONTROL = 1.0;
+  autonomi = 1.0;
+  autonom.broadcastAndWait();
+}
+
+// "when BumperB pressed" hat block
+void onevent_BumperB_pressed_0() {
+  Brain.playSound(tada);
+  DRIVERCONTROL = 0.0;
+  autonomi = 0.0;
+  stop.broadcastAndWait();
+}
+
+// "when Controller ButtonL1 pressed" hat block
+void onevent_ControllerButtonL1_pressed_0() {
+  Brain.playNote(3, 1, 1000);
+  DRIVERCONTROL = 1.0;
+  autonomi = 1.0;
+  autonom.broadcastAndWait();
+}
+
+// "when Controller ButtonL2 pressed" hat block
+void onevent_ControllerButtonL2_pressed_0() {
+  Brain.playSound(tada);
+  DRIVERCONTROL = 0.0;
+  autonomi = 0.0;
+  stop.broadcastAndWait();
+}
+
+
+int main() {
+  // register event handlers
+  stop(onevent_stop_0);
+  message1(onevent_message1_0);
+  autonom(onevent_autonom_0);
+  BumperG.pressed(onevent_BumperG_pressed_0);
+  BumperB.pressed(onevent_BumperB_pressed_0);
+  Controller.ButtonL1.pressed(onevent_ControllerButtonL1_pressed_0);
+  Controller.ButtonL2.pressed(onevent_ControllerButtonL2_pressed_0);
+
+  wait(15, msec);
+  // post event registration
+
+  // set default print color to black
+  printf("\033[30m");
+
+  // Wait for ADI sensors to initialize
+  wait(100, msec);
+
+
+  whenStarted1();
+}
